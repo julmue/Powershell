@@ -115,7 +115,7 @@ function gitmulti (
 
     # The command you want to perform
  	if(!($Cmd)) {
-		$Cmd = "status"
+		$Cmd = "status -s"
 	}
 
 
@@ -134,7 +134,8 @@ function gitmulti (
         Push-Location $folder 
 
         # Perform the command within the folder
-        & git $Cmd
+        # & "git $Cmd"
+        Invoke-Expression "git $cmd"
 
         # Go back to the original folder
         Pop-Location
