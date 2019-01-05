@@ -25,9 +25,9 @@ $env:path += (";" + $Env:userprofile + "\Scripts")
 # Functions
 
 # This needs some more attentions and sensible defaults or error or whatnot
-function Get-PathFromBookmark ([string]$BookmarkName) {
-	(Get-LocationBookmark).Get_Item($BookmarkName)
-}
+# function Get-PathFromBookmark ([string]$BookmarkName) {
+# 	(Get-LocationBookmark).Get_Item($BookmarkName)
+# }
 
 function Kill-ProcessByName ([string]$PorcessName) {
 	taskkill /F /IM ($PorcessName + ".exe")
@@ -71,6 +71,17 @@ function Jump-UniqueExplorer ([Parameter(Mandatory=$false)][string]$Path) {
 	Jump-Explorer($Path)
 }
 
+# hide dotfiles
+function Hide-Dotfiles ([Parameter(Mandatory=$false)][string]$Path){
+	if(!($Path)) {
+		$Path = Get-Location
+	}
+    Get-ChildItem $Path -force | 
+        Where-Object {$_.name -like ".*" -and $_.attributes -match 'Hidden' -eq $false} | 
+        Set-ItemProperty -name Attributes -value ([System.IO.FileAttributes]::Hidden)
+}
+
+
 # Generates two functions to get to directory parents
 # u4 -> up 4 levels
 # uuuu -> up 4 levels
@@ -80,43 +91,6 @@ for($i = 1; $i -le 5; $i++){
   $d =  $u.Replace("u","../")
   Invoke-Expression "function $u { push-location $d }"
   Invoke-Expression "function $unum { push-location $d }"
-}
-
-# -----------------------------------------------------------------------------
-# Scaffolding and Build Functions
-
-function Create-LetterDe ([Parameter(Mandatory=$false)][string]$LetterName) {
-
-	$Source = ($ENV:userprofile + "\Templates\Brief\")
-
-	if($LetterName) {
-		$Target = (".\" + $LetterName)
-	} else {
-		$Target = ".\Brief"
-	}
-	Copy-Item -Recurse $Source $Target
-
-	if($LetterName) {
-		Rename-Item -Path ($Target + "\Brief.pandoc") -NewName ($LetterName + ".pandoc")
-	}
-}
-
-function Build-LetterDe ([Parameter(Mandatory=$true)][string]$LetterName) {
-	$Filename = (Get-Item $LetterName).Basename
-	$Accentcolor = "B93C5A"
-	$Textcolor = "444444"
-
-	pandoc (".\" + $Filename + ".pandoc") `
-		--template=letter.latex `
-		-o (".\" + $Filename + ".pdf") `
-		-V lang=german `
-		-V fontfamily=mathpazo `
-		-V textcolor=$Textcolor `
-		-V accentcolor=$Accentcolor `
-		-V letteroption=DIN `
-		-M classoption='fromalign=right' `
-		-M classoption='foldmarks=false' `
-		-M classoption='fromrule=aftername'
 }
 
 # -----------------------------------------------------------------------------
@@ -172,11 +146,65 @@ Set-Alias ke Close-ExplorerWindows
 Set-Alias p Get-PathFromBookmark
 Set-Alias c Open-Universal
 
-Set-Alias kip Kill-ProcessByName
+Set-Alias stop Kill-ProcessByName
 
-# Scaffolding 
-Set-Alias brief Create-LetterDe
+Set-Alias google es
+
+# --
+# incubator alias
+Set-Alias cex Create-NamedExcelFile
+Set-Alias crush Minimize-AllWindows
+Set-Alias pop Unminimize-AllWindows
 
 # -----------------------------------------------------------------------------
-# Basic Setup
-set-location C:\Users\jmueller
+# Incubator
+
+# function that creates a (named) empty excel file in the current working directory
+function Create-NamedExcelFile ([Parameter(Mandatory=$false)][string]$Name) {
+	if ($Name) {
+		$OutputFile = Join-Path $PWD $Name
+		}
+	else {
+		$OutputFile = Join-Path $PWD  "new"
+	}
+	
+	$excel = New-Object -ComObject excel.application
+	$excel.visible = $True
+    $workbook = $excel.Workbooks.Add()
+	$workbook.SaveAs($OutputFile)
+ 	$excel.Quit()
+
+}
+
+
+# function that brings the windows of an application into focus
+# * function that minimizes all windows but those of one process
+# * function that maximizes all windows of a specific process
+function Show-Process($Process, [Switch]$Maximize)
+{
+# does not work in all cases
+(New-Object -ComObject WScript.Shell).AppActivate((get-process $Process).MainWindowTitle)
+}
+
+function Minimize-AllWindows() {
+$shell = New-Object -ComObject "Shell.Application"
+$shell.minimizeall()
+}
+
+function Unminimize-AllWindows() {
+$shell = New-Object -ComObject "Shell.Application"
+$shell.undominimizeall()
+}
+
+# todo
+function zoom([Parameter(Mandatory=$false)][string]$Process) {
+    test $Process    
+    }
+
+
+function test([Parameter(Mandatory=$false)][string]$Process) {
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("'Microsoft.VisualBasic")
+    Get-Process | Where-Object {$_.Name -like $Process}
+    # $a = Get-Process | Where-Object {$_.Name -like $Process}
+    [Microsoft.VisualBasic.Interaction]::AppActivate($a.ID)
+}
