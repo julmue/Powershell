@@ -208,6 +208,10 @@ function Backup-Kb {
     Push-Location "C:\Users\jmueller\kb\kb_ram_anki"
     Push-Repo
     Pop-Location
+
+    # backup mindmaps
+    Write-Host "Backing up knowledge base: Mindmaps" -foregroundColor "green"
+    Push-Repos -Path "C:\Users\jmueller\kb\kb_mm"
     
     # backup notebooks
     Write-Host "Backing up knowledge base: Notebooks" -foregroundColor "green"
