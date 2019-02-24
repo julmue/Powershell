@@ -15,6 +15,18 @@ Import-Module -name PSBookmark
 #	This will save C:\Documents as docs
 #		save docs C:\Documents
 
+function Get-LocationBookmarkPath([Parameter(Mandatory=$false)][string]$Bookmark) {    
+    if(!($Bookmark)) {
+        # set default path
+        ${env:USERPROFILE}
+    } else {
+        (Get-LocationBookmark)[$Bookmark]
+    }
+ }
+
+set-alias bookmarks glb
+set-alias path Get-LocationBookmarkPath
+
 # -----------------------------------------------------------------------------
 # Directories
 
@@ -71,6 +83,7 @@ function Jump-UniqueExplorer ([Parameter(Mandatory=$false)][string]$Path) {
 	Jump-Explorer($Path)
 }
 
+
 # hide dotfiles
 function Hide-Dotfiles ([Parameter(Mandatory=$false)][string]$Path){
 	if(!($Path)) {
@@ -80,6 +93,7 @@ function Hide-Dotfiles ([Parameter(Mandatory=$false)][string]$Path){
         Where-Object {$_.name -like ".*" -and $_.attributes -match 'Hidden' -eq $false} | 
         Set-ItemProperty -name Attributes -value ([System.IO.FileAttributes]::Hidden)
 }
+
 
 
 # Generates two functions to get to directory parents
@@ -92,6 +106,23 @@ for($i = 1; $i -le 5; $i++){
   Invoke-Expression "function $u { push-location $d }"
   Invoke-Expression "function $unum { push-location $d }"
 }
+
+
+
+# sudo command in powershell
+# https://www.elasticsky.de/2012/12/powershell-sudo/
+function elevate-console {
+    powershell -new_console:a
+}
+
+set-alias sudo elevate-console;
+
+
+
+# create symbolic link
+function make-link ($link, $target) {    New-Item -Path $link -ItemType SymbolicLink -Value $target}
+
+set-alias rewire make-link
 
 
 # invoke command on multiple git repositories
@@ -203,7 +234,7 @@ Set-Alias google es
 # --
 # incubator alias
 Set-Alias cex Create-NamedExcelFile
-Set-Alias crush Minimize-AllWindows
+# Set-Alias crush Minimize-AllWindows
 Set-Alias pop Unminimize-AllWindows
 
 # -----------------------------------------------------------------------------
