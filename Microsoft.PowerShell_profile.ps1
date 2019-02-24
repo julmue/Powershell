@@ -173,6 +173,89 @@ function gitmulti (
     }
 }
 
+# -----------------------------------------------------------------------------
+# Backups 
+# TODO: Refactor better logic ... very rudimentary
+
+function Backup {
+    Write-Host "Backing up ..." -foregroundColor "green"
+    Backup-Dotfiles
+    Backup-Kb
+    Write-Host "Backing up: Done" -foregroundColor "green"
+}
+
+
+function Backup-Dotfiles {
+    Write-Host "Backing up dotfiles" -foregroundColor "green"
+    Push-Repos -Path "C:\Users\jmueller\dotfiles"
+}
+
+
+# save everything in kb
+function Backup-Kb {
+
+
+    Write-Host "Backing up knowledge base" -foregroundColor "green"
+    
+    # backup keepass database (aka gateway)
+    Write-Host "Backing up knowledge base: Keepass Database" -foregroundColor "green"
+    Push-Location "C:\Users\jmueller\kb\kb_gateway"
+    Push-Repo
+    Pop-Location
+    
+    # backup anki
+    Write-Host "Backing up knowledge base: Anki Database" -foregroundColor "green"
+    Push-Location "C:\Users\jmueller\kb\kb_ram_anki"
+    Push-Repo
+    Pop-Location
+    
+    # backup notebooks
+    Write-Host "Backing up knowledge base: Notebooks" -foregroundColor "green"
+    Push-Repos -Path "C:\Users\jmueller\kb\kb_nbs"
+
+    # backup snp specific notebooks
+    Write-Host "Backing up knowledge base: SNP Notebooks" -foregroundColor "green"
+    Push-Repos -Path "C:\Users\jmueller\kb\kb_nbs_snp"
+}
+
+# dispatcher of push-repo by one level
+function Push-Repos ([Parameter(Mandatory=$true)][string]$Path){
+    $Depth = 0
+    $Cmd = "PUSH REPOSITORY TO ORIGIN"
+
+    $OldPath = Get-Location
+
+    set-location($Path)
+
+    $folders = Get-ChildItem -Path $Path -Depth $Depth -Recurse -Force
+
+    ForEach ($folder in $folders) {
+    
+        Write-Host "Performing git $Cmd in folder: '$folder'..." -foregroundColor "green"
+
+        # Go into the folder
+        Push-Location $folder 
+
+        # Perform the command within the folder
+        # & "git $Cmd"
+        # Invoke-Expression 
+        Push-Repo
+
+        # Go back to the original folder
+        Pop-Location
+    }
+
+    set-location($OldPath)
+
+}
+
+function Push-Repo {
+    git add *
+    git commit -m Get-Date
+    # should check: branch equals master
+    git push -u origin master
+}
+
 
 # -----------------------------------------------------------------------------
 # Prompt Functions
