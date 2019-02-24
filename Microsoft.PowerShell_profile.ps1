@@ -178,12 +178,19 @@ function gitmulti (
 # TODO: Refactor better logic ... very rudimentary
 
 function Backup {
+    
     Write-Host "Backing up ..." -foregroundColor "green"
+    Backup-Portables
     Backup-Dotfiles
     Backup-Kb
     Write-Host "Backing up: Done" -foregroundColor "green"
 }
 
+
+function Backup-Portables {
+    Write-Host "Backing up portables" -foregroundColor "green"
+    Push-Repos -Path "C:\Users\jmueller\bin\bin_portable"
+}
 
 function Backup-Dotfiles {
     Write-Host "Backing up dotfiles" -foregroundColor "green"
